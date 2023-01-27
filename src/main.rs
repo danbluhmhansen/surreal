@@ -14,7 +14,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .body("INFO FOR DB;")
         .send()
         .await?
-        .json::<Vec<SurrealResponse>>()
+        .json::<Vec<SurrealResponse<SurrealInfo>>>()
         .await?;
 
     println!("{:?}", res[0]);
@@ -23,8 +23,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
 }
 
 #[derive(Debug, Deserialize)]
-struct SurrealResponse {
+struct SurrealResponse<T> {
     time: String,
     status: String,
-    result: serde_json::Value,
+    result: T,
+}
+
+#[derive(Debug, Deserialize)]
+struct SurrealInfo {
+    dl: serde_json::Value,
+    dt: serde_json::Value,
+    sc: serde_json::Value,
+    tb: serde_json::Value,
 }
