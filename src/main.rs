@@ -1,25 +1,66 @@
+use dotenvy::dotenv;
+use reqwest::{Body, Client, RequestBuilder};
 use serde::Deserialize;
-use std::error::Error;
+use std::{
+    env::{self, VarError},
+    error::Error,
+};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let client = reqwest::Client::new();
+    dotenv()?;
 
-    let res = client
-        .post("http://localhost:8000/sql")
-        .basic_auth("dan", Some("surreal"))
-        .header("Accept", "application/json")
-        .header("NS", "surreal")
-        .header("DB", "surreal")
-        .body("INFO FOR DB;")
-        .send()
-        .await?
-        .json::<Vec<SurrealResponse<SurrealInfo>>>()
-        .await?;
+    let res = surreal_get::<SurrealInfo>().await?;
 
     println!("{:?}", res[0]);
 
     Ok(())
+}
+
+async fn surreal_get<T>() -> Result<Vec<SurrealResponse<T>>, Box<dyn Error>>
+where
+    T: for<'a> Deserialize<'a>,
+{
+    Ok(Client::new()
+        .get(env::var("DB_URL")?)
+        .surreal()?
+        .send()
+        .await?
+        .json::<Vec<SurrealResponse<T>>>()
+        .await?)
+}
+
+async fn surreal_post<T, B: Into<Body>>(body: B) -> Result<Vec<SurrealResponse<T>>, Box<dyn Error>>
+where
+    T: for<'a> Deserialize<'a>,
+{
+    Ok(Client::new()
+        .post(env::var("DB_URL")?)
+        .surreal()?
+        .body(body)
+        .send()
+        .await?
+        .json::<Vec<SurrealResponse<T>>>()
+        .await?)
+}
+
+trait SurrealRequest {
+    fn surreal(self) -> Result<Self, VarError>
+    where
+        Self: Sized;
+}
+
+impl SurrealRequest for RequestBuilder {
+    fn surreal(self) -> Result<Self, VarError>
+    where
+        Self: Sized,
+    {
+        Ok(self
+            .basic_auth(env::var("DB_USER")?, Some(env::var("DB_PASS")?))
+            .header("Accept", "application/json")
+            .header("NS", env::var("DB_NAME")?)
+            .header("DB", env::var("DB_NAME")?))
+    }
 }
 
 #[derive(Debug, Deserialize)]
