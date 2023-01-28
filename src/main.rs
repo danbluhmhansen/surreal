@@ -1,65 +1,65 @@
 use dotenvy::dotenv;
-use reqwest::{Body, Client, RequestBuilder};
+use reqwest::{Body, Client};
 use serde::Deserialize;
-use std::{
-    env::{self, VarError},
-    error::Error,
-};
+use std::{env, error::Error};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     dotenv()?;
 
-    let res = surreal_get::<SurrealInfo>().await?;
+    let res = SurrealClient::new(
+        env::var("DB_URL")?,
+        env::var("DB_USER")?,
+        Some(env::var("DB_PASS")?),
+        env::var("DB_NAME")?,
+    )
+    .send::<SurrealInfo, &str>("INFO FOR DB;")
+    .await?;
 
     println!("{:?}", res[0]);
 
     Ok(())
 }
 
-async fn surreal_get<T>() -> Result<Vec<SurrealResponse<T>>, Box<dyn Error>>
-where
-    T: for<'a> Deserialize<'a>,
-{
-    Ok(Client::new()
-        .get(env::var("DB_URL")?)
-        .surreal()?
-        .send()
-        .await?
-        .json::<Vec<SurrealResponse<T>>>()
-        .await?)
+#[derive(Debug)]
+struct SurrealClient {
+    url: String,
+    user: String,
+    pass: Option<String>,
+    name: String,
+    client: Client,
 }
 
-async fn surreal_post<T, B: Into<Body>>(body: B) -> Result<Vec<SurrealResponse<T>>, Box<dyn Error>>
-where
-    T: for<'a> Deserialize<'a>,
-{
-    Ok(Client::new()
-        .post(env::var("DB_URL")?)
-        .surreal()?
-        .body(body)
-        .send()
-        .await?
-        .json::<Vec<SurrealResponse<T>>>()
-        .await?)
-}
+impl SurrealClient {
+    fn new(url: String, user: String, pass: Option<String>, name: String) -> Self {
+        SurrealClient {
+            url,
+            user,
+            pass,
+            name,
+            client: Client::new(),
+        }
+    }
 
-trait SurrealRequest {
-    fn surreal(self) -> Result<Self, VarError>
+    async fn send<T, B: Into<Body>>(
+        &self,
+        body: B,
+    ) -> Result<Vec<SurrealResponse<T>>, Box<dyn Error>>
     where
-        Self: Sized;
-}
-
-impl SurrealRequest for RequestBuilder {
-    fn surreal(self) -> Result<Self, VarError>
-    where
-        Self: Sized,
+        T: for<'a> Deserialize<'a>,
     {
         Ok(self
-            .basic_auth(env::var("DB_USER")?, Some(env::var("DB_PASS")?))
+            .client
+            .post(&self.url)
+            .body(body)
+            .basic_auth(&self.user, self.pass.as_ref())
             .header("Accept", "application/json")
-            .header("NS", env::var("DB_NAME")?)
-            .header("DB", env::var("DB_NAME")?))
+            .header("NS", &self.name)
+            .header("DB", &self.name)
+            .send()
+            .await?
+            .json::<Vec<SurrealResponse<T>>>()
+            .await?)
     }
 }
 
