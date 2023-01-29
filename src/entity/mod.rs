@@ -1,8 +1,7 @@
-use std::collections::HashMap;
-
 use chrono::{DateTime, Utc};
 use nameof::name_of;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Character {
@@ -30,6 +29,7 @@ impl Character {
             });
         }
 
+        res.push_str(";");
         res
     }
 
