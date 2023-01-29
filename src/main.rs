@@ -3,7 +3,7 @@ mod entity;
 
 use crate::{
     client::{SurrealClient, SurrealInfo},
-    entity::Account,
+    entity::Character,
 };
 use dotenvy::dotenv;
 use std::{env, error::Error};
@@ -23,7 +23,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("{:?}", info[0]);
 
     let account = client
-        .send::<Vec<Account>, String>(Account::new("ACME Inc".to_string()).create())
+        .send::<Vec<Character>, String>(Character::new("Yildac Nobleroot".to_string()).create())
         .await?;
     println!("{:?}", account[0]);
 
