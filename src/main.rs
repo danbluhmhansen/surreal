@@ -6,6 +6,7 @@ use crate::{
     entity::Character,
 };
 use dotenvy::dotenv;
+use r#macro::SurrealCreate;
 use std::{env, error::Error};
 
 #[tokio::main]
@@ -23,7 +24,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("{:?}", info[0]);
 
     let account = client
-        .send::<Vec<Character>, String>(Character::new("Yildac Nobleroot".to_string()).create())
+        .send::<Vec<Character>, String>(Character::new("Yildac Nobleroot".to_string(), 16).create())
         .await?;
     println!("{:?}", account[0]);
 

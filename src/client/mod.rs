@@ -30,7 +30,7 @@ impl SurrealClient {
     where
         T: for<'a> Deserialize<'a>,
     {
-        Ok(self
+        let result = self
             .client
             .post(&self.url)
             .body(body)
@@ -40,8 +40,10 @@ impl SurrealClient {
             .header("DB", &self.name)
             .send()
             .await?
-            .json::<Vec<SurrealResponse<T>>>()
-            .await?)
+            .text()
+            .await?;
+        println!("{}", result);
+        Ok(serde_json::from_str::<Vec<SurrealResponse<T>>>(&result)?)
     }
 }
 
