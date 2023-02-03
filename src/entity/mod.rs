@@ -4,12 +4,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, SurrealCreate)]
 pub struct Character {
-    name: String,
+    name:     String,
     strength: i32,
 }
 
 impl Character {
-    pub fn new(name: String, strength: i32) -> Self {
-        Character { name, strength }
-    }
+    pub fn new(name: String, strength: i32) -> Self { Character { name, strength } }
 }

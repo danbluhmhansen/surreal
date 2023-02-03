@@ -5,10 +5,10 @@ use serde::Deserialize;
 
 #[derive(Debug)]
 pub struct SurrealClient {
-    url: String,
-    user: String,
-    pass: Option<String>,
-    name: String,
+    url:    String,
+    user:   String,
+    pass:   Option<String>,
+    name:   String,
     client: Client,
 }
 
@@ -23,10 +23,7 @@ impl SurrealClient {
         }
     }
 
-    pub async fn send<T, B: Into<Body>>(
-        &self,
-        body: B,
-    ) -> Result<Vec<SurrealResponse<T>>, Box<dyn Error>>
+    pub async fn send<T, B: Into<Body>>(&self, body: B) -> Result<Vec<SurrealResponse<T>>, Box<dyn Error>>
     where
         T: for<'a> Deserialize<'a>,
     {
@@ -49,7 +46,7 @@ impl SurrealClient {
 
 #[derive(Debug, Deserialize)]
 pub struct SurrealResponse<T> {
-    time: String,
+    time:   String,
     status: String,
     result: T,
 }

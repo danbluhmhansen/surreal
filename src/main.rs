@@ -1,13 +1,15 @@
 mod client;
 mod entity;
 
+use std::{env, error::Error};
+
+use dotenvy::dotenv;
+use r#macro::SurrealCreate;
+
 use crate::{
     client::{SurrealClient, SurrealInfo},
     entity::Character,
 };
-use dotenvy::dotenv;
-use r#macro::SurrealCreate;
-use std::{env, error::Error};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
